@@ -1,0 +1,43 @@
+pipeline {
+    agent any 
+	tools {
+		maven 'maven_path'
+		}
+    stages {
+        stage('SCM-Checkout') { 
+            steps {
+                git branch: 'main', credentialsId: 'git-credentials', 
+				url: 'https://github.com/vikas99341/jessica-tomcat.git'
+            }
+        }
+        stage('mvn-clean') { 
+            steps {
+                sh 'mvn clean'
+            }
+        }
+        stage('mvn-compile') { 
+            steps {
+                sh 'mvn compile'  
+            }
+        }
+        stage('mvn-test') { 
+            steps {
+                sh 'mvn test'  
+            }
+        }
+        stage('mvn-package') { 
+            steps {
+                sh 'mvn package'  
+            }
+        }
+        stage('Tomcat-Deploy') { 
+            steps {
+                sshagent(['tomcat-credentials']) {
+					sh """
+						scp -o StrictHostKeyChecking=no target/JessicaWebApp.war ec2-user@43.205.129.181:/opt/tomcat/webapps/
+					"""
+				}  
+            }
+        }
+    }
+}
